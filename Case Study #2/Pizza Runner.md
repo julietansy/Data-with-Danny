@@ -61,7 +61,8 @@
 
 1. How many pizzas were ordered?
    
-       SELECT COUNT(pizza_id) AS pizza_order
+       SELECT
+           COUNT(pizza_id) AS pizza_order
        FROM customer_orders;
 
 | pizza_order |
@@ -70,7 +71,8 @@
 
 2. How many unique customer orders were made?
 
-        SELECT COUNT(DISTINCT order_id) AS unique_order
+        SELECT
+           COUNT(DISTINCT order_id) AS unique_order
         FROM customer_orders;
 
 | unique_order |
@@ -80,11 +82,18 @@
 
 3. How many successful orders were delivered by each runner?
 
-          SELECT runner_id, COUNT(duration) AS successful_delivery
-          FROM runner_orders
-          WHERE duration != ''
-          GROUP BY runner_id
-          ORDER BY runner_id;
+        SELECT 
+          runner_id,
+          COUNT(duration) AS successful_delivery
+        FROM 
+          runner_orders
+        WHERE 
+          duration != ''
+        GROUP BY 
+          runner_id
+        ORDER BY 
+          runner_id;
+
 
 | runner_id | successful_delivery |
 | --------- | ------------------- |
@@ -94,15 +103,27 @@
 
 4. How many of each type of pizza was delivered?
 
-        SELECT cus.pizza_id, pn.pizza_name, COUNT(del.duration) AS successful_delivery
-        FROM customer_orders cus
-        LEFT JOIN runner_orders del
-        ON del.order_id = cus.order_id
-        LEFT JOIN pizza_names pn
-        ON cus.pizza_id = pn.pizza_id
-        WHERE del.duration != ''
-        GROUP BY cus.pizza_id, pn.pizza_name
-        ORDER BY cus.pizza_id;
+        SELECT 
+          cus.pizza_id,
+          pn.pizza_name,
+          COUNT(del.duration) AS successful_delivery
+        FROM 
+          customer_orders cus
+        LEFT JOIN 
+          runner_orders del
+        ON 
+          del.order_id = cus.order_id
+        LEFT JOIN 
+          pizza_names pn
+        ON 
+          cus.pizza_id = pn.pizza_id
+        WHERE 
+          del.duration != ''
+        GROUP BY 
+          cus.pizza_id, pn.pizza_name
+        ORDER BY 
+          cus.pizza_id;
+
 
 | pizza_id | pizza_name | successful_delivery |
 | -------- | ---------- | ------------------- |
@@ -111,12 +132,21 @@
 
 5. How many Vegetarian and Meatlovers were ordered by each customer?
 
-        SELECT pn.pizza_name, cus.customer_id, COUNT(pn.pizza_name) AS pizza_ordered
-        FROM customer_orders cus
-        LEFT JOIN pizza_names pn
-        ON cus.pizza_id = pn.pizza_id
-        GROUP BY cus.customer_id, pn.pizza_name
-        ORDER BY pn.pizza_name, cus.customer_id;
+        SELECT 
+          pn.pizza_name,
+          cus.customer_id,
+          COUNT(pn.pizza_name) AS pizza_ordered
+        FROM 
+          customer_orders cus
+        LEFT JOIN 
+          pizza_names pn
+        ON 
+          cus.pizza_id = pn.pizza_id
+        GROUP BY 
+          cus.customer_id, pn.pizza_name
+        ORDER BY 
+          pn.pizza_name, cus.customer_id;
+
 
 | pizza_name | customer_id | pizza_ordered |
 | ---------- | ----------- | ------------- |
@@ -131,11 +161,17 @@
 
 6. What was the maximum number of pizzas delivered in a single order?
 
-        SELECT order_id, COUNT(pizza_id) AS order_qty
-        FROM customer_orders
-        GROUP BY order_id
-        ORDER BY order_qty DESC
+        SELECT 
+          order_id,
+          COUNT(pizza_id) AS order_qty
+        FROM 
+          customer_orders
+        GROUP BY 
+          order_id
+        ORDER BY 
+          order_qty DESC
         LIMIT 1;
+
 
 | order_id | order_qty |
 | -------- | --------- |
@@ -143,12 +179,21 @@
 
 7. For each customer, how many delivered pizzas had at least 1 change and how many had no changes?
 
-        SELECT cus.customer_id, COUNT(cus.pizza_id) AS pizza_changed
-        FROM customer_orders cus
-        LEFT JOIN runner_orders del
-        ON cus.order_id = del.order_id
-        WHERE del.duration != '' AND (cus.exclusions != '' OR cus.extras != '')
-        GROUP BY cus.customer_id;
+        SELECT 
+          cus.customer_id,
+          COUNT(cus.pizza_id) AS pizza_changed
+        FROM 
+          customer_orders cus
+        LEFT JOIN 
+          runner_orders del
+        ON 
+          cus.order_id = del.order_id
+        WHERE 
+          del.duration != '' 
+          AND (cus.exclusions != '' OR cus.extras != '')
+        GROUP BY 
+          cus.customer_id;
+
 
 | customer_id | pizza_changed |
 | ----------- | ------------- |
@@ -156,12 +201,21 @@
 | 104         | 2             |
 | 105         | 1             |
 
-        SELECT cus.customer_id, COUNT(cus.pizza_id) AS pizza_unchanged
-        FROM customer_orders cus
-        LEFT JOIN runner_orders del
-        ON cus.order_id = del.order_id
-        WHERE del.duration != '' AND (cus.exclusions = '' AND cus.extras = '')
-        GROUP BY cus.customer_id;
+        SELECT 
+          cus.customer_id,
+          COUNT(cus.pizza_id) AS pizza_unchanged
+        FROM 
+          customer_orders cus
+        LEFT JOIN 
+          runner_orders del
+        ON 
+          cus.order_id = del.order_id
+        WHERE 
+          del.duration != '' 
+          AND (cus.exclusions = '' AND cus.extras = '')
+        GROUP BY 
+          cus.customer_id;
+
 
 | customer_id | pizza_unchanged |
 | ----------- | --------------- |
@@ -171,12 +225,21 @@
 
 8. How many pizzas were delivered that had both exclusions and extras?
 
-        SELECT cus.customer_id, COUNT(cus.pizza_id) AS pizza_exc_ext
-        FROM customer_orders cus
-        LEFT JOIN runner_orders del
-        ON cus.order_id = del.order_id
-        WHERE del.duration != '' AND (cus.exclusions != '' AND cus.extras != '')
-        GROUP BY cus.customer_id;
+        SELECT 
+          cus.customer_id,
+          COUNT(cus.pizza_id) AS pizza_exc_ext
+        FROM 
+          customer_orders cus
+        LEFT JOIN 
+          runner_orders del
+        ON 
+          cus.order_id = del.order_id
+        WHERE 
+          del.duration != '' 
+          AND (cus.exclusions != '' AND cus.extras != '')
+        GROUP BY 
+          cus.customer_id;
+
 
 | customer_id | pizza_exc_ext |
 | ----------- | ------------- |
@@ -184,10 +247,16 @@
 
 9. What was the total volume of pizzas ordered for each hour of the day?
 
-        SELECT EXTRACT(HOUR FROM order_time) AS hour_of_day, COUNT(pizza_id) AS pizza_order
-        FROM customer_orders
-        GROUP BY hour_of_day
-        ORDER BY hour_of_day;
+        SELECT 
+          EXTRACT(HOUR FROM order_time) AS hour_of_day,
+          COUNT(pizza_id) AS pizza_order
+        FROM 
+          customer_orders
+        GROUP BY 
+          hour_of_day
+        ORDER BY 
+          hour_of_day;
+
 
 | hour_of_day | pizza_order |
 | ----------- | ----------- |
@@ -200,10 +269,16 @@
 
 10. What was the volume of orders for each day of the week?
 
-        SELECT EXTRACT(DOW FROM order_time) AS day_of_week, COUNT(pizza_id) AS pizza_order
-        FROM customer_orders
-        GROUP BY day_of_week
-        ORDER BY day_of_week;
+        SELECT 
+          EXTRACT(DOW FROM order_time) AS day_of_week,
+          COUNT(pizza_id) AS pizza_order
+        FROM 
+          customer_orders
+        GROUP BY 
+          day_of_week
+        ORDER BY 
+          day_of_week;
+
 
 | day_of_week | pizza_order |
 | ----------- | ----------- |
@@ -216,11 +291,17 @@
 
 1. How many runners signed up for each 1 week period? (i.e. week starts 2021-01-01)
 
-        SELECT
-                   EXTRACT(WEEK FROM registration_date) AS week_no, COUNT(runner_id) AS runner_count, registration_date
-        FROM runners
-        GROUP BY week_no, registration_date
-        ORDER BY week_no;
+        SELECT 
+          EXTRACT(WEEK FROM registration_date) AS week_no,
+          COUNT(runner_id) AS runner_count,
+          registration_date
+        FROM 
+          runners
+        GROUP BY 
+          week_no, registration_date
+        ORDER BY 
+          week_no;
+
 
 | week_no | runner_count | registration_date        |
 | ------- | ------------ | ------------------------ |
@@ -238,23 +319,29 @@ If your system follows ISO 8601, then January 1, 2021, was a Friday, and since i
 If you want to change this behavior or if your database system uses a different set of rules, you may need to refer to the documentation of your specific database system to understand how week numbering is implemented and whether there are any settings or options that can be adjusted.
 
 2. What was the average time in minutes it took for each runner to arrive at the Pizza Runner HQ to pickup the order?
+        
+        WITH time_diff AS (
+          SELECT 
+            del.runner_id,
+            EXTRACT(MINUTE FROM del.pickup_time::timestamp - cus.order_time::timestamp) AS minutes,
+            EXTRACT(SECOND FROM del.pickup_time::timestamp - cus.order_time::timestamp) AS seconds
+          FROM 
+            customer_orders cus
+          LEFT JOIN 
+            runner_orders del ON cus.order_id = del.order_id
+          WHERE 
+            del.duration != ''
+        )
+        SELECT
+          runner_id,
+          CAST(AVG(minutes) AS DECIMAL(10, 2)) AS avg_minutes
+        FROM 
+          time_diff
+        GROUP BY 
+          runner_id
+        ORDER BY 
+          runner_id;
 
-    WITH time_diff AS (
-      SELECT 
-      	del.runner_id,
-    	EXTRACT(MINUTE FROM del.pickup_time::timestamp - cus.order_time::timestamp) AS minutes,
-        EXTRACT(SECOND FROM del.pickup_time::timestamp - cus.order_time::timestamp) AS seconds
-      FROM customer_orders cus
-      LEFT JOIN runner_orders del
-      ON cus.order_id = del.order_id
-      WHERE del.duration != '' )
-      
-     SELECT
-        runner_id,
-        CAST(AVG(minutes) AS DECIMAL(10, 2)) AS avg_minutes
-     FROM time_diff
-     GROUP BY runner_id
-     ORDER BY runner_id;
 
 | runner_id | avg_minutes |
 | --------- | ----------- |
@@ -268,22 +355,29 @@ If you want to change this behavior or if your database system uses a different 
 
 4. What was the average distance travelled for each customer?
 
-            WITH dist_travel AS (
-              SELECT 
-              	del.order_id,
-              	cus.customer_id,
-              	CAST(REGEXP_REPLACE(distance, '[^0-9.]', '', 'g') AS DECIMAL) AS distance
-              FROM runner_orders del
-              LEFT JOIN customer_orders cus
-              ON del.order_id = cus.order_id
-              WHERE del.duration != '' )
-              
-             SELECT 
-             	customer_id,
-                ROUND(AVG(distance), 2) AS avg_dist
-             FROM dist_travel
-             GROUP BY customer_id
-             ORDER BY customer_id;
+        WITH dist_travel AS (
+          SELECT 
+            del.order_id,
+            cus.customer_id,
+            CAST(REGEXP_REPLACE(distance, '[^0-9.]', '', 'g') AS DECIMAL) AS distance
+          FROM 
+            runner_orders del
+          LEFT JOIN 
+            customer_orders cus ON del.order_id = cus.order_id
+          WHERE 
+            del.duration != ''
+        )
+        
+        SELECT 
+          customer_id,
+          ROUND(AVG(distance), 2) AS avg_dist
+        FROM 
+          dist_travel
+        GROUP BY 
+          customer_id
+        ORDER BY 
+          customer_id;
+
 
 | customer_id | avg_dist |
 | ----------- | -------- |
@@ -295,51 +389,51 @@ If you want to change this behavior or if your database system uses a different 
 
 5. What was the difference between the longest and shortest delivery times for all orders?
 
-            WITH time_diff AS (
-              SELECT 
-                del.runner_id,
-              	del.pickup_time,
-              	cus.order_time,
-              	RANK() OVER (ORDER BY EXTRACT(MINUTE FROM del.pickup_time::timestamp - cus.order_time::timestamp), 
-                                      EXTRACT(SECOND FROM del.pickup_time::timestamp - cus.order_time::timestamp)) AS rank_no
-            FROM customer_orders cus
-            LEFT JOIN runner_orders del
-            ON cus.order_id = del.order_id
-            WHERE del.duration != '' ),
-            max_del_time AS (
-              	SELECT pickup_time, order_time
-              	FROM time_diff
-            	WHERE rank_no = (SELECT MAX(rank_no) FROM time_diff) LIMIT 1),
-            min_del_time AS (
-              	SELECT pickup_time, order_time
-              	FROM time_diff
-            	WHERE rank_no = (SELECT MIN(rank_no) FROM time_diff) LIMIT 1)
-              
-            
-            SELECT 
-              EXTRACT(MINUTE FROM (
-                (
-                  SELECT ma.pickup_time::timestamp - ma.order_time::timestamp
-                  FROM max_del_time ma
-                )
-                -
-                (
-                  SELECT mi.pickup_time::timestamp - mi.order_time::timestamp
-                  FROM min_del_time mi
-                )
-              )) AS minutes,
-              
-              EXTRACT(SECOND FROM (
-                (
-                  SELECT ma.pickup_time::timestamp - ma.order_time::timestamp
-                  FROM max_del_time ma
-                )
-                -
-                (
-                  SELECT mi.pickup_time::timestamp - mi.order_time::timestamp
-                  FROM min_del_time mi
-                )
-              )) AS seconds;
+        WITH time_diff AS (
+          SELECT 
+            del.runner_id,
+            del.pickup_time,
+            cus.order_time,
+            RANK() OVER (
+              ORDER BY 
+                EXTRACT(MINUTE FROM del.pickup_time::timestamp - cus.order_time::timestamp), 
+                EXTRACT(SECOND FROM del.pickup_time::timestamp - cus.order_time::timestamp)
+            ) AS rank_no
+          FROM 
+            customer_orders cus
+          LEFT JOIN 
+            runner_orders del ON cus.order_id = del.order_id
+          WHERE 
+            del.duration != ''
+        ),
+        max_del_time AS (
+          SELECT 
+            pickup_time,
+            order_time
+          FROM 
+            time_diff
+          WHERE 
+            rank_no = (SELECT MAX(rank_no) FROM time_diff)
+          LIMIT 1
+        ),
+        min_del_time AS (
+          SELECT 
+            pickup_time,
+            order_time
+          FROM 
+            time_diff
+          WHERE 
+            rank_no = (SELECT MIN(rank_no) FROM time_diff)
+          LIMIT 1
+        )
+        
+        SELECT 
+          EXTRACT(MINUTE FROM (max_del_time.pickup_time::timestamp - max_del_time.order_time::timestamp)
+                              - (min_del_time.pickup_time::timestamp - min_del_time.order_time::timestamp)) AS minutes,
+          
+          EXTRACT(SECOND FROM (max_del_time.pickup_time::timestamp - max_del_time.order_time::timestamp)
+                              - (min_del_time.pickup_time::timestamp - min_del_time.order_time::timestamp)) AS seconds;
+
 
 | minutes | seconds |
 | ------- | ------- |
@@ -360,13 +454,17 @@ If you want to change this behavior or if your database system uses a different 
           WHERE 
             del.duration != ''
         )
-
+        
         SELECT
           runner_id,
           ROUND(AVG(speed_kmh), 2) AS avg_speed
-        FROM del_travel
-        GROUP BY runner_id
-        ORDER BY runner_id;
+        FROM 
+          del_travel
+        GROUP BY 
+          runner_id
+        ORDER BY 
+          runner_id;
+
 
 
 | runner_id | avg_speed |
@@ -377,21 +475,28 @@ If you want to change this behavior or if your database system uses a different 
 
 7. What is the successful delivery percentage for each runner?
         
-            WITH complete_order AS (
-              SELECT
-              	runner_id,
-              	COUNT(order_id) AS com_order
-              FROM runner_orders
-              WHERE duration != ''
-              GROUP BY runner_id)
-            
-            SELECT 
-            	del.runner_id,
-                ROUND(cdel.com_order * 1.0 / COUNT(del.order_id) * 100) AS del_percent
-            FROM runner_orders del
-            LEFT JOIN complete_order cdel
-            ON del.runner_id = cdel.runner_id
-            GROUP BY del.runner_id, cdel.com_order;
+        WITH complete_order AS (
+          SELECT
+            runner_id,
+            COUNT(order_id) AS com_order
+          FROM 
+            runner_orders
+          WHERE 
+            duration != ''
+          GROUP BY 
+            runner_id
+        )
+        
+        SELECT 
+          del.runner_id,
+          ROUND(cdel.com_order * 1.0 / COUNT(del.order_id) * 100) AS del_percent
+        FROM 
+          runner_orders del
+        LEFT JOIN 
+          complete_order cdel ON del.runner_id = cdel.runner_id
+        GROUP BY 
+          del.runner_id, cdel.com_order;
+
 
 | runner_id | del_percent |
 | --------- | ----------- |
@@ -403,21 +508,22 @@ If you want to change this behavior or if your database system uses a different 
 
 1. What are the standard ingredients for each pizza?
 
-            SELECT
-              pr.pizza_id,
-              pn.pizza_name,
-              STRING_AGG(topping_name, ', ') AS standard_ingredients_list
-            FROM
-              pizza_recipes pr
-            LEFT JOIN
-              pizza_toppings ON topping_id = ANY(STRING_TO_ARRAY(toppings, ',')::int[])
-            LEFT JOIN
-              pizza_names pn
-              ON pr.pizza_id = pn.pizza_id
-            GROUP BY 
-              pr.pizza_id, 
-              pn.pizza_name
-            ORDER BY pr.pizza_id;
+        SELECT
+          pr.pizza_id,
+          pn.pizza_name,
+          STRING_AGG(topping_name, ', ') AS standard_ingredients_list
+        FROM
+          pizza_recipes pr
+        LEFT JOIN
+          pizza_toppings ON topping_id = ANY(STRING_TO_ARRAY(toppings, ',')::int[])
+        LEFT JOIN
+          pizza_names pn ON pr.pizza_id = pn.pizza_id
+        GROUP BY 
+          pr.pizza_id, 
+          pn.pizza_name
+        ORDER BY 
+          pr.pizza_id;
+
 
 | pizza_id | pizza_name | standard_ingredients_list                                             |
 | -------- | ---------- | --------------------------------------------------------------------- |
@@ -426,22 +532,23 @@ If you want to change this behavior or if your database system uses a different 
 
 2. What was the most commonly added extra?
 
-            WITH extras_top AS (
-              SELECT
-              	unnest(STRING_TO_ARRAY(extras, ',')::int[]) AS topping_id,
-              	COUNT(pizza_id) AS count
-            	FROM
-              	customer_orders
-            	GROUP BY topping_id
-            	ORDER BY count)
-                
-             SELECT
-             	et.topping_id,
-                pt.topping_name,
-                et.count
-             FROM extras_top et
-             LEFT JOIN pizza_toppings pt
-             ON et.topping_id = pt.topping_id;
+        WITH extras_top AS (
+          SELECT
+            unnest(STRING_TO_ARRAY(extras, ',')::int[]) AS topping_id,
+            COUNT(pizza_id) AS count
+          FROM
+            customer_orders
+          GROUP BY topping_id
+          ORDER BY count
+        )
+        
+        SELECT
+          et.topping_id,
+          pt.topping_name,
+          et.count
+        FROM extras_top et
+        LEFT JOIN pizza_toppings pt ON et.topping_id = pt.topping_id;
+
 
 | topping_id | topping_name | count |
 | ---------- | ------------ | ----- |
@@ -451,23 +558,24 @@ If you want to change this behavior or if your database system uses a different 
 
 3. What was the most common exclusion?
 
-            WITH exclu_top AS (
-              SELECT
-              	unnest(STRING_TO_ARRAY(exclusions, ',')::int[]) AS exclu_topping_id,
-              	COUNT(pizza_id) AS count
-            	FROM
-              	customer_orders
-            	GROUP BY exclu_topping_id
-            	ORDER BY count)
-                
-             SELECT
-             	et.exclu_topping_id,
-                pt.topping_name,
-                et.count
-             FROM exclu_top et
-             LEFT JOIN pizza_toppings pt
-             ON et.exclu_topping_id = pt.topping_id
-             ORDER BY count DESC;
+        WITH exclu_top AS (
+          SELECT
+            unnest(STRING_TO_ARRAY(exclusions, ',')::int[]) AS exclu_topping_id,
+            COUNT(pizza_id) AS count
+          FROM
+            customer_orders
+          GROUP BY exclu_topping_id
+          ORDER BY count
+        )
+        
+        SELECT
+          et.exclu_topping_id,
+          pt.topping_name,
+          et.count
+        FROM exclu_top et
+        LEFT JOIN pizza_toppings pt ON et.exclu_topping_id = pt.topping_id
+        ORDER BY count DESC;
+
 
 | exclu_topping_id | topping_name | count |
 | ---------------- | ------------ | ----- |
@@ -481,20 +589,20 @@ If you want to change this behavior or if your database system uses a different 
     - Meat Lovers - Extra Bacon
     - Meat Lovers - Exclude Cheese, Bacon - Extra Mushroom, Peppers
 
-            SELECT
-            	order_id,
-                pizza_id,
-                CASE WHEN pizza_id = 2 THEN 'Yes' ELSE '-' END AS Meat_Lovers,
-                CASE WHEN STRING_AGG(exclusions, ',') LIKE '%3%' THEN 'Yes' ELSE '-' END AS Meat_Lovers_Exclude_Beef,
-                CASE WHEN STRING_AGG(extras, ',') LIKE '%1%' THEN 'Yes' ELSE '-' END AS Meat_Lovers_Extra_Bacon,
-                CASE WHEN STRING_AGG(exclusions, ',') LIKE '%1%' 
-                	OR STRING_AGG(exclusions, ',') LIKE '%3%' 
-                    OR STRING_AGG(exclusions, ',') LIKE '%6%' 
-                    OR STRING_AGG(exclusions, ',') LIKE '%9%' 
-                    THEN 'Yes' ELSE '-' END AS Meat_Lovers_Exclude_CBMP
-            FROM customer_orders
-            GROUP BY order_id, pizza_id
-            ORDER BY order_id;
+        SELECT
+          order_id,
+          pizza_id,
+          CASE WHEN pizza_id = 2 THEN 'Yes' ELSE '-' END AS Meat_Lovers,
+          CASE WHEN STRING_AGG(exclusions, ',') LIKE '%3%' THEN 'Yes' ELSE '-' END AS Meat_Lovers_Exclude_Beef,
+          CASE WHEN STRING_AGG(extras, ',') LIKE '%1%' THEN 'Yes' ELSE '-' END AS Meat_Lovers_Extra_Bacon,
+          CASE WHEN STRING_AGG(exclusions, ',') LIKE '%1%' 
+               OR STRING_AGG(exclusions, ',') LIKE '%3%' 
+               OR STRING_AGG(exclusions, ',') LIKE '%6%' 
+               OR STRING_AGG(exclusions, ',') LIKE '%9%' 
+               THEN 'Yes' ELSE '-' END AS Meat_Lovers_Exclude_CBMP
+        FROM customer_orders
+        GROUP BY order_id, pizza_id
+        ORDER BY order_id;
 
 | order_id | pizza_id | meat_lovers | meat_lovers_exclude_beef | meat_lovers_extra_bacon | meat_lovers_exclude_cbmp |
 | -------- | -------- | ----------- | ------------------------ | ----------------------- | ------------------------ |
@@ -514,5 +622,85 @@ If you want to change this behavior or if your database system uses a different 
 5. Generate an alphabetically ordered comma separated ingredient list for each pizza order from the customer_orders table and add a 2x in front of any relevant ingredients
     - For example: "Meat Lovers: 2xBacon, Beef, ... , Salami"
 
+            WITH pizza_ingredients AS (
+              SELECT
+                cus.sn,
+                cus.order_id,
+                cus.pizza_id,
+                cus.exclusions,
+                cus.extras,
+                pn.pizza_name,
+                STRING_AGG(topping_name, ', ') AS excluded_ingredient
+              FROM 
+                (SELECT ROW_NUMBER() OVER (ORDER BY order_id) AS sn, * FROM customer_orders) AS cus
+              LEFT JOIN 
+                pizza_toppings ON topping_id = ANY(STRING_TO_ARRAY(exclusions, ',')::int[])
+              LEFT JOIN 
+                pizza_names pn ON cus.pizza_id = pn.pizza_id
+              GROUP BY
+                cus.sn,
+                cus.order_id,
+                cus.pizza_id,
+                cus.exclusions,
+                cus.extras,
+                pn.pizza_name
+              ORDER BY
+                cus.order_id
+            ), 
+            pizza_ingredients_2 AS (
+              SELECT 
+                pi.*,
+                STRING_AGG(topping_name, ', ') AS extras_ingredient
+              FROM 
+                pizza_ingredients pi
+              LEFT JOIN 
+                pizza_toppings ON topping_id = ANY(STRING_TO_ARRAY(extras, ', ')::int[])
+              GROUP BY
+                pi.sn,
+                pi.order_id,
+                pi.pizza_id,
+                pi.exclusions,
+                pi.extras,
+                pi.pizza_name,
+                pi.excluded_ingredient
+            )
+            
+            SELECT 
+              pi2.sn,
+              pi2.order_id,
+              pi2.pizza_name,
+              STRING_AGG(
+                CASE
+                  WHEN pt.topping_name = ANY(STRING_TO_ARRAY(pi2.extras_ingredient, ', ')) THEN '2x ' || pt.topping_name
+                  WHEN pt.topping_name = ANY(STRING_TO_ARRAY(pi2.excluded_ingredient, ', ')) THEN NULL
+                  ELSE pt.topping_name
+                END, ', ' ORDER BY LOWER(pt.topping_name)) AS standard_ingredient
+            FROM 
+              pizza_ingredients_2 pi2
+            LEFT JOIN 
+              pizza_recipes pr ON pr.pizza_id = pi2.pizza_id
+            LEFT JOIN 
+              pizza_toppings pt ON pt.topping_id = ANY(STRING_TO_ARRAY(pr.toppings, ',')::int[])
+            GROUP BY
+              pi2.sn,
+              pi2.order_id,
+              pi2.pizza_name;
+
+| sn  | order_id | pizza_name | standard_ingredient                                                      |
+| --- | -------- | ---------- | ------------------------------------------------------------------------ |
+| 1   | 1        | Meatlovers | Bacon, BBQ Sauce, Beef, Cheese, Chicken, Mushrooms, Pepperoni, Salami    |
+| 2   | 2        | Meatlovers | Bacon, BBQ Sauce, Beef, Cheese, Chicken, Mushrooms, Pepperoni, Salami    |
+| 3   | 3        | Meatlovers | Bacon, BBQ Sauce, Beef, Cheese, Chicken, Mushrooms, Pepperoni, Salami    |
+| 4   | 3        | Vegetarian | Cheese, Mushrooms, Onions, Peppers, Tomato Sauce, Tomatoes               |
+| 5   | 4        | Meatlovers | Bacon, BBQ Sauce, Beef, Chicken, Mushrooms, Pepperoni, Salami            |
+| 6   | 4        | Meatlovers | Bacon, BBQ Sauce, Beef, Chicken, Mushrooms, Pepperoni, Salami            |
+| 7   | 4        | Vegetarian | Mushrooms, Onions, Peppers, Tomato Sauce, Tomatoes                       |
+| 8   | 5        | Meatlovers | 2x Bacon, BBQ Sauce, Beef, Cheese, Chicken, Mushrooms, Pepperoni, Salami |
+| 9   | 6        | Vegetarian | Cheese, Mushrooms, Onions, Peppers, Tomato Sauce, Tomatoes               |
+| 10  | 7        | Vegetarian | Cheese, Mushrooms, Onions, Peppers, Tomato Sauce, Tomatoes               |
+| 11  | 8        | Meatlovers | Bacon, BBQ Sauce, Beef, Cheese, Chicken, Mushrooms, Pepperoni, Salami    |
+| 12  | 9        | Meatlovers | 2x Bacon, BBQ Sauce, Beef, 2x Chicken, Mushrooms, Pepperoni, Salami      |
+| 13  | 10       | Meatlovers | Bacon, BBQ Sauce, Beef, Cheese, Chicken, Mushrooms, Pepperoni, Salami    |
+| 14  | 10       | Meatlovers | 2x Bacon, Beef, 2x Cheese, Chicken, Pepperoni, Salami                    |
 
 6. What is the total quantity of each ingredient used in all delivered pizzas sorted by most frequent first?
