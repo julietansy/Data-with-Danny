@@ -351,7 +351,33 @@ If you want to change this behavior or if your database system uses a different 
    
 3. Is there any relationship between the number of pizzas and how long the order takes to prepare?
 
+            WITH order_prep AS (
+              SELECT
+              	cus.order_id,
+              	COUNT(cus.pizza_id) AS pizza_count,
+              	(del.pickup_time::timestamp - cus.order_time::timestamp) AS prep_time
+              FROM customer_orders cus
+              LEFT JOIN runner_orders del ON cus.order_id = del.order_id
+              WHERE del.duration != ''
+              GROUP BY
+              	cus.order_id,
+              	del.pickup_time,
+              	cus.order_time
+            )
+            
+            SELECT 
+            	pizza_count, 
+                EXTRACT(MINUTE FROM AVG(prep_time)) AS avg_minutes,
+                CAST(EXTRACT(SECOND FROM AVG(prep_time)) AS DECIMAL(2, 0)) AS avg_seconds
+            FROM order_prep
+            GROUP BY pizza_count
+            ORDER BY pizza_count;
 
+| pizza_count | avg_minutes | avg_seconds |
+| ----------- | ----------- | ----------- |
+| 1           | 12          | 21          |
+| 2           | 18          | 23          |
+| 3           | 29          | 17          |
 
 4. What was the average distance travelled for each customer?
 
@@ -589,20 +615,20 @@ If you want to change this behavior or if your database system uses a different 
     - Meat Lovers - Extra Bacon
     - Meat Lovers - Exclude Cheese, Bacon - Extra Mushroom, Peppers
 
-        SELECT
-          order_id,
-          pizza_id,
-          CASE WHEN pizza_id = 2 THEN 'Yes' ELSE '-' END AS Meat_Lovers,
-          CASE WHEN STRING_AGG(exclusions, ',') LIKE '%3%' THEN 'Yes' ELSE '-' END AS Meat_Lovers_Exclude_Beef,
-          CASE WHEN STRING_AGG(extras, ',') LIKE '%1%' THEN 'Yes' ELSE '-' END AS Meat_Lovers_Extra_Bacon,
-          CASE WHEN STRING_AGG(exclusions, ',') LIKE '%1%' 
-               OR STRING_AGG(exclusions, ',') LIKE '%3%' 
-               OR STRING_AGG(exclusions, ',') LIKE '%6%' 
-               OR STRING_AGG(exclusions, ',') LIKE '%9%' 
-               THEN 'Yes' ELSE '-' END AS Meat_Lovers_Exclude_CBMP
-        FROM customer_orders
-        GROUP BY order_id, pizza_id
-        ORDER BY order_id;
+                SELECT
+                  order_id,
+                  pizza_id,
+                  CASE WHEN pizza_id = 2 THEN 'Yes' ELSE '-' END AS Meat_Lovers,
+                  CASE WHEN STRING_AGG(exclusions, ',') LIKE '%3%' THEN 'Yes' ELSE '-' END AS Meat_Lovers_Exclude_Beef,
+                  CASE WHEN STRING_AGG(extras, ',') LIKE '%1%' THEN 'Yes' ELSE '-' END AS Meat_Lovers_Extra_Bacon,
+                  CASE WHEN STRING_AGG(exclusions, ',') LIKE '%1%' 
+                       OR STRING_AGG(exclusions, ',') LIKE '%3%' 
+                       OR STRING_AGG(exclusions, ',') LIKE '%6%' 
+                       OR STRING_AGG(exclusions, ',') LIKE '%9%' 
+                       THEN 'Yes' ELSE '-' END AS Meat_Lovers_Exclude_CBMP
+                FROM customer_orders
+                GROUP BY order_id, pizza_id
+                ORDER BY order_id;
 
 | order_id | pizza_id | meat_lovers | meat_lovers_exclude_beef | meat_lovers_extra_bacon | meat_lovers_exclude_cbmp |
 | -------- | -------- | ----------- | ------------------------ | ----------------------- | ------------------------ |
