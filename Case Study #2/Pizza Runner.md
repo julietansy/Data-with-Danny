@@ -6,20 +6,47 @@
 
 ## Business Case
 
+Pizza Runner, a culinary venture inspired by the timeless appeal of pizza and the efficiency of the gig economy. Conceived by Danny, this innovative endeavor seamlessly blends 80s retro styling with the convenience of modern delivery services. More than just a pizzeria, Pizza Runner transforms pizza delivery through a fleet of dedicated "runners" and a user-friendly mobile app developed by freelance developers. Join us in exploring the strategic vision, operational prowess, and growth potential that define Pizza Runner's quest to revolutionize the global pizza delivery experience.
+
 ## Data Collected
+
+![image](https://github.com/julietansy/Data-with-Danny/assets/151416878/320b9ef7-ff09-4ebc-8a42-1c25d4d9b10f)
+
 
 **Table 1: runners**
 
+The runners table shows the registration_date for each new runner.
+
 **Table 2: customer_orders**
+
+
+Orders from customers are recorded in the "customer_orders" table, with each row representing an individual pizza within an order. The "pizza_id" indicates the type of pizza ordered. In the context of these orders, "exclusions" are ingredient_id values meant to be removed from the pizza, while "extras" are ingredient_id values intended to be added.
+
+It's important to note that a single order can comprise multiple pizzas, and these pizzas can be of the same type but with varying exclusions and extras.
+
+Before incorporating the "exclusions" and "extras" columns into queries, it's necessary to clean up and preprocess these columns for accurate and effective use.
 
 **Table 3: runner_orders**
 
+
+Following the receipt of each order through the system, a designated runner is assigned. It's important to note that not all orders are successfully completed and may be canceled by either the restaurant or the customer.
+
+The "pickup_time" serves as the timestamp indicating when the assigned runner arrives at Pizza Runner headquarters to collect the freshly prepared pizzas. Additionally, the "distance" and "duration" fields provide information about the distance traveled and the time taken by the runner for the delivery.
+
+It's crucial to exercise caution when utilizing this table due to known data issues. Ensure careful scrutiny of the data types for each column as specified in the schema SQL when incorporating this information into queries.
+
 **Table 4: pizza_names**
+
+Presently, Pizza Runner offers a limited selection of two pizzas: the Meat Lovers and the Vegetarian.
 
 **Table 5: pizza_recipes**
 
+
+Every pizza_id is associated with a predefined set of toppings, constituting the standard ingredients used in the pizza recipe.
+ 
 **Table 6: pizza_toppings**
 
+The table encompasses all topping_name values paired with their respective topping_id values.
 
 ## Case Study Questions
 
@@ -69,6 +96,8 @@
 | ----------- |
 | 14          |
 
+There are 14 pizza orders being placed.
+
 2. How many unique customer orders were made?
 
         SELECT
@@ -79,6 +108,7 @@
 | ------------ |
 | 10           |
 
+There are 10 unique customer order being placed.
 
 3. How many successful orders were delivered by each runner?
 
@@ -100,6 +130,9 @@
 | 1         | 4                   |
 | 2         | 3                   |
 | 3         | 1                   |
+
+The table shows the count of successful deliveries for each runner. Runner 1 completed 4 successful deliveries, Runner 2 completed 3, and Runner 3 completed 1.
+
 
 4. How many of each type of pizza was delivered?
 
@@ -130,6 +163,8 @@
 | 1        | Meatlovers | 9                   |
 | 2        | Vegetarian | 3                   |
 
+Meatlovers pizza has been delivered 9 times, while Vegetarian pizza has been delivered 3 times. This insight can be valuable for understanding customer preferences and demand for different pizza types
+
 5. How many Vegetarian and Meatlovers were ordered by each customer?
 
         SELECT 
@@ -159,6 +194,8 @@
 | Vegetarian | 103         | 1             |
 | Vegetarian | 105         | 1             |
 
+The customer base shows diversity in pizza preferences and Meatlovers emerges as a potentially more popular choice.
+
 6. What was the maximum number of pizzas delivered in a single order?
 
         SELECT 
@@ -176,6 +213,9 @@
 | order_id | order_qty |
 | -------- | --------- |
 | 4        | 3         |
+
+
+The query output indicates that the maximum number of pizzas delivered in a single order was 3.
 
 7. For each customer, how many delivered pizzas had at least 1 change and how many had no changes?
 
