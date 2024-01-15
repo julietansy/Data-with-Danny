@@ -704,3 +704,72 @@ If you want to change this behavior or if your database system uses a different 
 | 14  | 10       | Meatlovers | 2x Bacon, Beef, 2x Cheese, Chicken, Pepperoni, Salami                    |
 
 6. What is the total quantity of each ingredient used in all delivered pizzas sorted by most frequent first?
+
+            WITH standard AS (
+                SELECT
+                    UNNEST(STRING_TO_ARRAY(pr.toppings, ', '))::integer AS standard,
+                    COUNT(*) AS standard_count
+                FROM
+                    customer_orders cus
+                LEFT JOIN
+                    runner_orders del ON cus.order_id = del.order_id
+                LEFT JOIN
+                    pizza_recipes pr ON pr.pizza_id = cus.pizza_id
+                WHERE del.duration != ''
+                GROUP BY standard
+            ),
+            excluded AS (
+                SELECT
+                    UNNEST(STRING_TO_ARRAY(cus.exclusions, ', '))::integer AS removal,
+                    COUNT(*) AS excluded_count
+                FROM
+                    customer_orders cus
+                LEFT JOIN
+                    runner_orders del ON cus.order_id = del.order_id
+                LEFT JOIN
+                    pizza_recipes pr ON pr.pizza_id = cus.pizza_id
+                WHERE del.duration != ''
+                GROUP BY removal
+            ),
+            additional AS (
+                SELECT
+                    UNNEST(STRING_TO_ARRAY(cus.extras, ', '))::integer AS addition,
+                    COUNT(*) AS addition_count
+                FROM
+                    customer_orders cus
+                LEFT JOIN
+                    runner_orders del ON cus.order_id = del.order_id
+                LEFT JOIN
+                    pizza_recipes pr ON pr.pizza_id = cus.pizza_id
+                WHERE del.duration != ''
+                GROUP BY addition
+            )
+            
+            SELECT 
+                pt.topping_name,
+                (s.standard_count - COALESCE(e.excluded_count, 0) + COALESCE(a.addition_count, 0)) AS final_count
+            FROM 
+                standard s
+            LEFT JOIN
+                pizza_toppings pt ON pt.topping_id = s.standard
+            LEFT JOIN 
+                excluded e ON s.standard = e.removal
+            LEFT JOIN 
+                additional a ON s.standard = a.addition
+            ORDER BY
+                final_count DESC;
+
+| topping_name | final_count |
+| ------------ | ----------- |
+| Bacon        | 12          |
+| Mushrooms    | 11          |
+| Cheese       | 10          |
+| Pepperoni    | 9           |
+| Salami       | 9           |
+| Chicken      | 9           |
+| Beef         | 9           |
+| BBQ Sauce    | 8           |
+| Tomato Sauce | 3           |
+| Onions       | 3           |
+| Peppers      | 3           |
+| Tomatoes     | 3           |
