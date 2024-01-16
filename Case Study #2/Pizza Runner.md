@@ -215,7 +215,7 @@ The customer base shows diversity in pizza preferences and Meatlovers emerges as
 | 4        | 3         |
 
 
-The query output indicates that the maximum number of pizzas delivered in a single order was 3.
+The query output indicates that the maximum number of pizzas delivered in a single order was 3 and that was for order_id 4.
 
 7. For each customer, how many delivered pizzas had at least 1 change and how many had no changes?
 
@@ -263,6 +263,8 @@ The query output indicates that the maximum number of pizzas delivered in a sing
 | 102         | 3               |
 | 104         | 1               |
 
+The two queries identifiied the number of delivered pizzas for each customer based on whether there were changes (additions or exclusions) or no changes made to the pizza orders. Customer_id 103 and 105 seems to have specific preferences over the pizza ordered as they had pizza changed for every order that was made.
+
 8. How many pizzas were delivered that had both exclusions and extras?
 
         SELECT 
@@ -284,6 +286,8 @@ The query output indicates that the maximum number of pizzas delivered in a sing
 | customer_id | pizza_exc_ext |
 | ----------- | ------------- |
 | 104         | 1             |
+
+Customer 104 had one pizza delivered with both exclusions and extras.
 
 9. What was the total volume of pizzas ordered for each hour of the day?
 
@@ -307,6 +311,14 @@ The query output indicates that the maximum number of pizzas delivered in a sing
 | 21          | 3           |
 | 23          | 3           |
 
+It was being observed that the higher volume of pizza orders during the following hours of the day:
+
+- 13:00 (1:00 PM), 18:00 (6:00 PM), 21:00 (9:00 PM) and 23:00 (11:00 PM):
+
+The concentration of higher pizza orders during the meal hours, such as lunch (13:00), dinner (18:00), supper (21:00), and late-night snacks (23:00), suggests a clear pattern of peak demand during traditional meal times.
+
+The insight underscores the importance for Pizza Runner to strategically manage operations, allocate resources efficiently, and possibly consider offering promotions or incentives during these peak hours to optimize sales and customer satisfaction.
+
 10. What was the volume of orders for each day of the week?
 
         SELECT 
@@ -326,6 +338,10 @@ The query output indicates that the maximum number of pizzas delivered in a sing
 | 4           | 3           |
 | 5           | 1           |
 | 6           | 5           |
+
+These results show the distribution of pizza orders across different days of the week, with Wednesday (3), Thursday (4), Friday (5), and Saturday (6).
+
+It appears that Saturday has the highest volume of pizza orders, and Wednesday also has a significant number of orders.
 
 ### B. Runner and Customer Experience
 
@@ -350,13 +366,8 @@ The query output indicates that the maximum number of pizzas delivered in a sing
 | 53      | 1            | 2021-01-03T00:00:00.000Z |
 | 53      | 1            | 2021-01-01T00:00:00.000Z |
 
-The behavior you're observing may be related to the specific rules for week numbering in the database system you're using, and it could also be influenced by the settings of the system's calendar.
+_Note: The week numbering is determined according to the ISO 8601 standard, which specifies that a week starts on a Monday and that the first week of the year is the week that contains at least four days of the new year. 01 January 2021, was a Friday, and since it doesn't meet the requirement of having at least four days of the new year, it is considered part of the last week of the previous year (Week 53 of the previous year). This is why 01 and 03 January are part of Week 53 instead of Week 1._
 
-In many systems, the week numbering is determined according to the ISO 8601 standard, which specifies that a week starts on a Monday and that the first week of the year is the week that contains at least four days of the new year. If January 1st falls on a Monday to Thursday, it is part of the first week of the year; otherwise, it is part of the last week of the previous year.
-
-If your system follows ISO 8601, then January 1, 2021, was a Friday, and since it doesn't meet the requirement of having at least four days of the new year, it is considered part of the last week of the previous year (Week 53 of the previous year). This is why you are seeing it as Week 53 instead of Week 1.
-
-If you want to change this behavior or if your database system uses a different set of rules, you may need to refer to the documentation of your specific database system to understand how week numbering is implemented and whether there are any settings or options that can be adjusted.
 
 2. What was the average time in minutes it took for each runner to arrive at the Pizza Runner HQ to pickup the order?
         
@@ -418,6 +429,8 @@ If you want to change this behavior or if your database system uses a different 
 | 1           | 12          | 21          |
 | 2           | 18          | 23          |
 | 3           | 29          | 17          |
+
+These results show the average preparation time, in both minutes and seconds, for orders with different pizza counts. As the pizza count increases, the average preparation time also tends to increase.
 
 4. What was the average distance travelled for each customer?
 
@@ -539,6 +552,8 @@ If you want to change this behavior or if your database system uses a different 
 | 2         | 51.78     |
 | 3         | 40.00     |
 
+The trend suggests that there are variations in the average speed among the runners, with Runner 2 being the fastest and Runner 3 being the slowest. It might be worth further investigation to understand the factors influencing these speed differences, such as distance traveled and delivery time.
+
 7. What is the successful delivery percentage for each runner?
         
         WITH complete_order AS (
@@ -622,6 +637,8 @@ If you want to change this behavior or if your database system uses a different 
 | 4          | Cheese       | 1     |
 | 5          | Chicken      | 1     |
 
+ "Bacon" (topping_id: 1) is the most commonly added extra topping, appearing in 4 pizzas. Additionally, "Cheese" and "Chicken" each appear once as added extras.
+ 
 3. What was the most common exclusion?
 
         WITH exclu_top AS (
@@ -648,6 +665,8 @@ If you want to change this behavior or if your database system uses a different 
 | 4                | Cheese       | 4     |
 | 2                | BBQ Sauce    | 1     |
 | 6                | Mushrooms    | 1     |
+
+"Cheese" (topping_id: 4) is the most commonly excluded topping, appearing in 4 pizzas. Additionally, "BBQ Sauce" and "Mushrooms" each appear once as excluded toppings.
 
 4. Generate an order item for each record in the customers_orders table in the format of one of the following:
     - Meat Lovers
