@@ -104,17 +104,18 @@
 1. What is the unique count and total amount for each transaction type?
 
         SELECT 
-        	txn_type,
-            COUNT(txn_type) AS total_txn,
-            SUM(txn_amount) AS total_amt
+           txn_type,
+           COUNT(txn_type) AS transaction_count,
+           SUM(txn_amount) AS transaction_amt
         FROM customer_transactions
         GROUP BY txn_type;
 
-| txn_type   | total_txn | total_amt |
-| ---------- | --------- | --------- |
-| purchase   | 1617      | 806537    |
-| deposit    | 2671      | 1359168   |
-| withdrawal | 1580      | 793003    |
+| txn_type   | transaction_count | transaction_amt |
+| ---------- | ----------------- | --------------- |
+| purchase   | 1617              | 806537          |
+| deposit    | 2671              | 1359168         |
+| withdrawal | 1580              | 793003          |
+
 
 2. What is the average total historical deposit counts and amounts for all customers?
 
@@ -123,9 +124,9 @@
             ROUND(AVG(avg_amt),2) AS avg_amt
         FROM (
         SELECT 
-        	ct.customer_id,
-            COUNT(ct.customer_id) AS total_txn,
-            AVG(ct.txn_amount) AS avg_amt
+           ct.customer_id,
+           COUNT(ct.customer_id) AS total_txn,
+           AVG(ct.txn_amount) AS avg_amt
         FROM customer_transactions ct
         WHERE ct.txn_type = 'deposit'
         GROUP BY ct.customer_id) as txn_details;
@@ -164,83 +165,74 @@
 
 Showing first 5.
 
+    WITH all_customer_months AS (
+      SELECT DISTINCT
+      	customer_id,
+        generate_series(
+          CAST(MIN(EXTRACT(MONTH FROM txn_date)) AS INT),
+          CAST(MAX(EXTRACT(MONTH FROM txn_date)) AS INT),
+          1) AS txn_month
+      FROM 
+      	customer_transactions
+      GROUP BY
+        customer_id
+      ORDER BY
+      	customer_id,
+      	txn_month
+    ),    
+    cus_balance AS (
+      SELECT 
+        ct.customer_id,
+      	acm.txn_month,
+    	COALESCE(SUM((CASE WHEN ct.txn_type = 'deposit' THEN ct.txn_amount ELSE 0 END) - 
+                      (CASE WHEN ct.txn_type = 'purchase' THEN ct.txn_amount ELSE 0 END) - 
+                      (CASE WHEN ct.txn_type = 'withdrawal' THEN ct.txn_amount ELSE 0 END)), 0) AS monthly_txn
+    FROM 
+      	all_customer_months acm
+    LEFT JOIN
+        customer_transactions ct on acm.customer_id = ct.customer_id AND acm.txn_month = EXTRACT(MONTH FROM ct.txn_date)
+    GROUP BY 
+        ct.customer_id, 
+        acm.txn_month
+    ORDER BY
+        ct.customer_id, 
+        acm.txn_month
+    ),
+    closing_balance AS (
+      SELECT
+      	acm.customer_id,
+      	acm.txn_month,
+      	SUM(cb.monthly_txn) OVER (PARTITION BY acm.customer_id ORDER BY acm.txn_month) AS closing_balance
+      FROM 
+      	all_customer_months acm
+      LEFT JOIN
+      	cus_balance cb on acm.customer_id = cb.customer_id AND acm.txn_month = cb.txn_month
+    	
+    )
+    
+    
+    SELECT *
+    FROM closing_balance;
 
-        WITH all_customer_months AS (
-            SELECT DISTINCT
-                customer_id,
-                generate_series(
-                    CAST(MIN(EXTRACT(MONTH FROM txn_date)) AS INT),
-                    CAST(MAX(EXTRACT(MONTH FROM txn_date)) AS INT),
-                    1
-                ) AS txn_month
-            FROM 
-                customer_transactions
-          	GROUP BY
-          		customer_id
-        )
-        
-        , monthly_txn AS (
-            SELECT
-                acm.customer_id,
-                acm.txn_month,
-                COALESCE(SUM(CASE WHEN ct.txn_type = 'deposit' THEN ct.txn_amount ELSE 0 END), 0) AS deposit,
-                COALESCE(SUM(CASE WHEN ct.txn_type = 'purchase' THEN ct.txn_amount ELSE 0 END), 0) AS purchase,
-                COALESCE(SUM(CASE WHEN ct.txn_type = 'withdrawal' THEN ct.txn_amount ELSE 0 END), 0) AS withdrawal
-            FROM 
-                all_customer_months acm
-            LEFT JOIN 
-                customer_transactions ct ON acm.customer_id = ct.customer_id AND acm.txn_month = EXTRACT(MONTH FROM ct.txn_date)
-            GROUP BY
-                acm.customer_id,
-                acm.txn_month
-        )
-        
-        , monthly_closing_amt AS (
-            SELECT
-                customer_id,
-                txn_month,
-                deposit,
-                purchase,
-                withdrawal,
-                (deposit - purchase - withdrawal) AS total_monthly
-            FROM 
-                monthly_txn
-        )
-        
-        , monthly_closing_balance AS (
-            SELECT
-                customer_id,
-                txn_month,
-                COALESCE(LAG(CAST(total_monthly AS INT), 1, 0) OVER (PARTITION BY customer_id ORDER BY txn_month), 0) AS prev_closing_balance,
-                COALESCE((LAG(CAST(total_monthly AS INT), 1, 0) OVER (PARTITION BY customer_id ORDER BY txn_month)), 0) + deposit - purchase - withdrawal AS closing_balance
-            FROM 
-                monthly_closing_amt
-        )
-        
-        SELECT 
-            *
-        FROM 
-            monthly_closing_balance;
-
-| customer_id | txn_month | prev_closing_balance | closing_balance |
-| ----------- | --------- | -------------------- | --------------- |
-| 1           | 1         | 0                    | 312             |
-| 1           | 2         | 312                  | 312             |
-| 1           | 3         | 0                    | -952            |
-| 2           | 1         | 0                    | 549             |
-| 2           | 2         | 549                  | 549             |
-| 2           | 3         | 0                    | 61              |
-| 3           | 1         | 0                    | 144             |
-| 3           | 2         | 144                  | -821            |
-| 3           | 3         | -965                 | -1366           |
-| 3           | 4         | -401                 | 92              |
-| 4           | 1         | 0                    | 848             |
-| 4           | 2         | 848                  | 848             |
-| 4           | 3         | 0                    | -193            |
-| 5           | 1         | 0                    | 954             |
-| 5           | 2         | 954                  | 954             |
-| 5           | 3         | 0                    | -2877           |
-| 5           | 4         | -2877                | -3367           |
+| customer_id | txn_month | closing_balance |
+| ----------- | --------- | --------------- |
+| 1           | 1         | 312             |
+| 1           | 2         | 312             |
+| 1           | 3         | -640            |
+| 2           | 1         | 549             |
+| 2           | 2         | 549             |
+| 2           | 3         | 610             |
+| 3           | 1         | 144             |
+| 3           | 2         | -821            |
+| 3           | 3         | -1222           |
+| 3           | 4         | -729            |
+| 4           | 1         | 848             |
+| 4           | 2         | 848             |
+| 4           | 3         | 655             |
+| 5           | 1         | 954             |
+| 5           | 2         | 954             |
+| 5           | 3         | -1923           |
+| 5           | 4         | -2413           |
 
 5. What is the percentage of customers who increase their closing balance by more than 5%?
 
