@@ -237,6 +237,77 @@ Showing first 5.
 5. What is the percentage of customers who increase their closing balance by more than 5%?
 
 
+            WITH all_customer_months AS (
+              SELECT DISTINCT
+              	customer_id,
+                generate_series(
+                  CAST(MIN(EXTRACT(MONTH FROM txn_date)) AS INT),
+                  CAST(MAX(EXTRACT(MONTH FROM txn_date)) AS INT),
+                  1) AS txn_month
+              FROM 
+              	customer_transactions
+              GROUP BY
+                customer_id
+              ORDER BY
+              	customer_id,
+              	txn_month
+            ), cus_balance AS (
+              SELECT 
+                ct.customer_id,
+              	acm.txn_month,
+            	COALESCE(SUM((CASE WHEN ct.txn_type = 'deposit' THEN ct.txn_amount ELSE 0 END) - 
+                              (CASE WHEN ct.txn_type = 'purchase' THEN ct.txn_amount ELSE 0 END) - 
+                              (CASE WHEN ct.txn_type = 'withdrawal' THEN ct.txn_amount ELSE 0 END)), 0) AS monthly_txn
+              FROM 
+                  all_customer_months acm
+              LEFT JOIN
+                  customer_transactions ct on acm.customer_id = ct.customer_id AND acm.txn_month = EXTRACT(MONTH FROM ct.txn_date)
+              GROUP BY 
+                  ct.customer_id, 
+                  acm.txn_month
+              ORDER BY
+                  ct.customer_id, 
+                  acm.txn_month
+            ), closing_balance AS (
+              SELECT
+              	acm.customer_id,
+              	acm.txn_month,
+              	SUM(cb.monthly_txn) OVER (PARTITION BY acm.customer_id ORDER BY acm.txn_month) AS closing_balance
+              FROM 
+              	all_customer_months acm
+              LEFT JOIN
+              	cus_balance cb on acm.customer_id = cb.customer_id AND acm.txn_month = cb.txn_month	
+            ), cus_growth AS (
+              SELECT 
+              	*,
+              	COALESCE((LAG(closing_balance) OVER (PARTITION BY customer_id ORDER BY txn_month)), 0) AS prev_closing_balance
+              FROM closing_balance
+             ), balance_summary AS ( 
+            SELECT 
+                c.customer_id, 
+                (
+                    SELECT p.closing_balance
+                    FROM cus_growth p 
+                    WHERE p.customer_id = c.customer_id AND p.txn_month = 1
+                    LIMIT 1
+                ) AS opening_balance,
+                c.closing_balance
+            FROM 
+                cus_growth c
+            WHERE 
+                c.txn_month = 3
+            )
+            
+            SELECT 
+                ROUND(((SELECT COUNT(customer_id) * 100.00
+                 FROM balance_summary
+                 WHERE (closing_balance * 100.00 / opening_balance) > 105.00) / COUNT(customer_id)), 2) AS growth_percentage_5
+            FROM balance_summary;
+
+| growth_percentage_5 |
+| ------------------- |
+| 44.98               |
+
 ## C. Data Allocation Challenge
 To test out a few different hypotheses - the Data Bank team wants to run an experiment where different groups of customers would be allocated data using 3 different options:
 
