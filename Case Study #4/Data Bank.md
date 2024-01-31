@@ -251,7 +251,7 @@ Showing first 5.
               ORDER BY
               	customer_id,
               	txn_month
-            ), cus_balance AS (
+            ), cus_monthly_txn AS (
               SELECT 
                 ct.customer_id,
               	acm.txn_month,
@@ -272,11 +272,11 @@ Showing first 5.
               SELECT
               	acm.customer_id,
               	acm.txn_month,
-              	SUM(cb.monthly_txn) OVER (PARTITION BY acm.customer_id ORDER BY acm.txn_month) AS closing_balance
+              	SUM(cmt.monthly_txn) OVER (PARTITION BY acm.customer_id ORDER BY acm.txn_month) AS closing_balance
               FROM 
               	all_customer_months acm
               LEFT JOIN
-              	cus_balance cb on acm.customer_id = cb.customer_id AND acm.txn_month = cb.txn_month	
+              	cus_monthly_txn cmt on acm.customer_id = cmt.customer_id AND acm.txn_month = cmt.txn_month	
             ), cus_growth AS (
               SELECT 
               	*,
@@ -320,6 +320,36 @@ Option 3: data is updated real-time
 For this multi-part challenge question - you have been requested to generate the following data elements to help the Data Bank team estimate how much data will need to be provisioned for each option:
 
 - running customer balance column that includes the impact each transaction
+
+            SELECT customer_id,
+                   txn_date,
+                   txn_type,
+                   txn_amount,
+                   SUM(CASE WHEN txn_type = 'deposit' THEN txn_amount
+            		WHEN txn_type = 'withdrawal' THEN -txn_amount
+            		WHEN txn_type = 'purchase' THEN -txn_amount
+            		ELSE 0
+            	   END) OVER(PARTITION BY customer_id ORDER BY txn_date) AS running_balance
+            FROM customer_transactions;
+
+| customer_id | txn_date                 | txn_type   | txn_amount | running_balance |
+| ----------- | ------------------------ | ---------- | ---------- | --------------- |
+| 1           | 2020-01-02T00:00:00.000Z | deposit    | 312        | 312             |
+| 1           | 2020-03-05T00:00:00.000Z | purchase   | 612        | -300            |
+| 1           | 2020-03-17T00:00:00.000Z | deposit    | 324        | 24              |
+| 1           | 2020-03-19T00:00:00.000Z | purchase   | 664        | -640            |
+| 2           | 2020-01-03T00:00:00.000Z | deposit    | 549        | 549             |
+| 2           | 2020-03-24T00:00:00.000Z | deposit    | 61         | 610             |
+| 3           | 2020-01-27T00:00:00.000Z | deposit    | 144        | 144             |
+| 3           | 2020-02-22T00:00:00.000Z | purchase   | 965        | -821            |
+| 3           | 2020-03-05T00:00:00.000Z | withdrawal | 213        | -1034           |
+| 3           | 2020-03-19T00:00:00.000Z | withdrawal | 188        | -1222           |
+| 3           | 2020-04-12T00:00:00.000Z | deposit    | 493        | -729            |
+| 4           | 2020-01-07T00:00:00.000Z | deposit    | 458        | 458             |
+| 4           | 2020-01-21T00:00:00.000Z | deposit    | 390        | 848             |
+| 4           | 2020-03-25T00:00:00.000Z | purchase   | 193        | 655             |
+
+
 - customer balance at the end of each month
 - minimum, average and maximum values of the running balance for each customer
 
