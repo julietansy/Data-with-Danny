@@ -17,31 +17,38 @@
 
         SELECT 
         	r.region_name,
-            COUNT(cn.node_id) AS nodes_count
+               COUNT(cn.node_id) AS nodes_count
         FROM 
         	customer_nodes cn
         LEFT JOIN
         	regions r ON cn.region_id = r.region_id
-        GROUP BY r.region_name;
+        GROUP BY
+               r.region_name;
+        ORDER BY
+               r.region_name;
 
 | region_name | nodes_count |
 | ----------- | ----------- |
-| America     | 735         |
-| Australia   | 770         |
 | Africa      | 714         |
+| America     | 735         |
 | Asia        | 665         |
+| Australia   | 770         |
 | Europe      | 616         |
 
 3. How many customers are allocated to each region?
 
         SELECT 
         	r.region_name,
-            COUNT(DISTINCT cn.customer_id) AS customer_count
+               COUNT(DISTINCT cn.customer_id) AS customer_count
         FROM 
         	customer_nodes cn
         LEFT JOIN
         	regions r ON cn.region_id = r.region_id
-        GROUP BY r.region_name;
+        GROUP BY
+               r.region_name
+        ORDER BY
+               r.region_name;
+   
 
 | region_name | customer_count |
 | ----------- | -------------- |
@@ -77,38 +84,42 @@
 
 5. What is the median, 80th and 95th percentile for this same reallocation days metric for each region?
 
-        SELECT 
-        	region_id,
-            PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY end_date - start_date) AS median_relocation_days,
-            PERCENTILE_CONT(0.8) WITHIN GROUP (ORDER BY end_date - start_date) AS percentile_80_relocation_days,
-            PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY end_date - start_date) AS percentile_95_relocation_days
-        FROM 
-            customer_nodes
-        WHERE
-            end_date != '9999-12-31'
-        GROUP BY 
-            region_id
-        ORDER BY 
-            region_id;
+           SELECT 
+                    r.region_name,
+                    PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY cn.end_date - cn.start_date) AS median_relocation_days,
+                    PERCENTILE_CONT(0.8) WITHIN GROUP (ORDER BY cn.end_date - cn.start_date) AS percentile_80_relocation_days,
+                    PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY cn.end_date - cn.start_date) AS percentile_95_relocation_days
+           FROM 
+                    customer_nodes cn
+           LEFT JOIN
+                    regions r ON cn.region_id = r.region_id
+           WHERE
+                   cn.end_date != '9999-12-31'
+           GROUP BY
+                    r.region_name
+           ORDER BY
+                    r.region_name;
 
-| region_id | median_relocation_days | percentile_80_relocation_days | percentile_95_relocation_days |
-| --------- | ---------------------- | ----------------------------- | ----------------------------- |
-| 1         | 15                     | 23                            | 28                            |
-| 2         | 15                     | 23                            | 28                            |
-| 3         | 15                     | 24                            | 28                            |
-| 4         | 15                     | 23                            | 28                            |
-| 5         | 15                     | 24                            | 28                            |
+| region_name | median_relocation_days | percentile_80_relocation_days | percentile_95_relocation_days |
+| ----------- | ---------------------- | ----------------------------- | ----------------------------- |
+| Africa      | 15                     | 24                            | 28                            |
+| America     | 15                     | 23                            | 28                            |
+| Asia        | 15                     | 23                            | 28                            |
+| Australia   | 15                     | 23                            | 28                            |
+| Europe      | 15                     | 24                            | 28                            |
 
 ## B. Customer Transactions
 
 1. What is the unique count and total amount for each transaction type?
 
         SELECT 
-           txn_type,
-           COUNT(txn_type) AS transaction_count,
-           SUM(txn_amount) AS transaction_amt
-        FROM customer_transactions
-        GROUP BY txn_type;
+               txn_type,
+               COUNT(txn_type) AS transaction_count,
+               SUM(txn_amount) AS transaction_amt
+        FROM
+               customer_transactions
+        GROUP BY
+               txn_type;
 
 | txn_type   | transaction_count | transaction_amt |
 | ---------- | ----------------- | --------------- |
@@ -122,14 +133,16 @@
         SELECT
             ROUND(AVG(total_txn)) AS avg_txn,
             ROUND(AVG(avg_amt),2) AS avg_amt
-        FROM (
-        SELECT 
-           ct.customer_id,
-           COUNT(ct.customer_id) AS total_txn,
-           AVG(ct.txn_amount) AS avg_amt
-        FROM customer_transactions ct
-        WHERE ct.txn_type = 'deposit'
-        GROUP BY ct.customer_id) as txn_details;
+        FROM
+           (
+            SELECT 
+               ct.customer_id,
+               COUNT(ct.customer_id) AS total_txn,
+               AVG(ct.txn_amount) AS avg_amt
+            FROM customer_transactions ct
+            WHERE ct.txn_type = 'deposit'
+            GROUP BY ct.customer_id
+           ) as txn_details;
 
 | avg_txn | avg_amt |
 | ------- | ------- |
@@ -141,9 +154,9 @@
             SELECT
                 customer_id,
                 EXTRACT(MONTH FROM txn_date) AS txn_month,
-          		SUM(CASE WHEN txn_type = 'deposit' THEN 1 ELSE 0 END) AS deposit,
-          		SUM(CASE WHEN txn_type = 'purchase' THEN 1 ELSE 0 END) AS purchase,
-          		SUM(CASE WHEN txn_type = 'withdrawal' THEN 1 ELSE 0 END) AS withdrawal
+                SUM(CASE WHEN txn_type = 'deposit' THEN 1 ELSE 0 END) AS deposit,
+          	SUM(CASE WHEN txn_type = 'purchase' THEN 1 ELSE 0 END) AS purchase,
+          	SUM(CASE WHEN txn_type = 'withdrawal' THEN 1 ELSE 0 END) AS withdrawal
             FROM 
           		customer_transactions
           	GROUP BY
@@ -152,65 +165,78 @@
         )
         
         SELECT
-            COUNT(customer_id)
+               COUNT(customer_id)
         FROM 
-            monthly_txn
-        WHERE deposit >= 1 AND (purchase >= 1 OR withdrawal >= 1);
+               monthly_txn
+        WHERE
+               deposit >= 1 AND (purchase >= 1 OR withdrawal >= 1)
+        GROUP BY
+                txn_month
+        ORDER BY
+                txn_month;
 
-| count |
-| ----- |
-| 1060  |
+| txn_month | count |
+| --------- | ----- |
+| 1         | 295   |
+| 2         | 298   |
+| 3         | 329   |
+| 4         | 138   |
 
 4. What is the closing balance for each customer at the end of the month?
 
 Showing first 5.
 
     WITH all_customer_months AS (
-      SELECT DISTINCT
-      	customer_id,
-        generate_series(
-          CAST(MIN(EXTRACT(MONTH FROM txn_date)) AS INT),
-          CAST(MAX(EXTRACT(MONTH FROM txn_date)) AS INT),
-          1) AS txn_month
-      FROM 
-      	customer_transactions
-      GROUP BY
-        customer_id
-      ORDER BY
-      	customer_id,
-      	txn_month
-    ),    
+        SELECT DISTINCT
+            customer_id,
+            txn_month
+        FROM
+            customer_transactions
+        CROSS JOIN (
+            SELECT
+                generate_series(
+                    CAST(MIN(EXTRACT(MONTH FROM txn_date)) AS INT),
+                    CAST(MAX(EXTRACT(MONTH FROM txn_date)) AS INT),
+                    1
+                ) AS txn_month
+            FROM
+                customer_transactions
+        ) AS all_months
+    ),
     cus_balance AS (
-      SELECT 
-        ct.customer_id,
-      	acm.txn_month,
-    	COALESCE(SUM((CASE WHEN ct.txn_type = 'deposit' THEN ct.txn_amount ELSE 0 END) - 
-                      (CASE WHEN ct.txn_type = 'purchase' THEN ct.txn_amount ELSE 0 END) - 
-                      (CASE WHEN ct.txn_type = 'withdrawal' THEN ct.txn_amount ELSE 0 END)), 0) AS monthly_txn
-    FROM 
-      	all_customer_months acm
-    LEFT JOIN
-        customer_transactions ct on acm.customer_id = ct.customer_id AND acm.txn_month = EXTRACT(MONTH FROM ct.txn_date)
-    GROUP BY 
-        ct.customer_id, 
-        acm.txn_month
-    ORDER BY
-        ct.customer_id, 
-        acm.txn_month
+        SELECT
+            ct.customer_id,
+            acm.txn_month,
+            COALESCE(
+                SUM(
+                    (CASE WHEN ct.txn_type = 'deposit' THEN ct.txn_amount ELSE 0 END) -
+                    (CASE WHEN ct.txn_type = 'purchase' THEN ct.txn_amount ELSE 0 END) -
+                    (CASE WHEN ct.txn_type = 'withdrawal' THEN ct.txn_amount ELSE 0 END)
+                ),
+                0
+            ) AS monthly_txn
+        FROM
+            all_customer_months acm
+        LEFT JOIN
+            customer_transactions ct ON acm.customer_id = ct.customer_id
+                                        AND acm.txn_month = EXTRACT(MONTH FROM ct.txn_date)
+        GROUP BY
+            ct.customer_id,
+            acm.txn_month
+        ORDER BY
+            ct.customer_id,
+            acm.txn_month
     ),
     closing_balance AS (
-      SELECT
-      	acm.customer_id,
-      	acm.txn_month,
-      	SUM(cb.monthly_txn) OVER (PARTITION BY acm.customer_id ORDER BY acm.txn_month) AS closing_balance
-      FROM 
-      	all_customer_months acm
-      LEFT JOIN
-      	cus_balance cb on acm.customer_id = cb.customer_id AND acm.txn_month = cb.txn_month
-    	
+        SELECT
+            acm.customer_id,
+            acm.txn_month,
+            SUM(cb.monthly_txn) OVER (PARTITION BY acm.customer_id ORDER BY acm.txn_month) AS closing_balance
+        FROM
+            all_customer_months acm
+        LEFT JOIN
+            cus_balance cb ON acm.customer_id = cb.customer_id AND acm.txn_month = cb.txn_month
     )
-    
-    
     SELECT *
     FROM closing_balance;
 
@@ -219,9 +245,11 @@ Showing first 5.
 | 1           | 1         | 312             |
 | 1           | 2         | 312             |
 | 1           | 3         | -640            |
+| 1           | 4         | -640            |
 | 2           | 1         | 549             |
 | 2           | 2         | 549             |
 | 2           | 3         | 610             |
+| 2           | 4         | 610             |
 | 3           | 1         | 144             |
 | 3           | 2         | -821            |
 | 3           | 3         | -1222           |
@@ -229,60 +257,68 @@ Showing first 5.
 | 4           | 1         | 848             |
 | 4           | 2         | 848             |
 | 4           | 3         | 655             |
+| 4           | 4         | 655             |
 | 5           | 1         | 954             |
 | 5           | 2         | 954             |
 | 5           | 3         | -1923           |
 | 5           | 4         | -2413           |
 
+
 5. What is the percentage of customers who increase their closing balance by more than 5%?
 
 
-            WITH all_customer_months AS (
-              SELECT DISTINCT
-              	customer_id,
-                generate_series(
-                  CAST(MIN(EXTRACT(MONTH FROM txn_date)) AS INT),
-                  CAST(MAX(EXTRACT(MONTH FROM txn_date)) AS INT),
-                  1) AS txn_month
-              FROM 
-              	customer_transactions
-              GROUP BY
-                customer_id
-              ORDER BY
-              	customer_id,
-              	txn_month
-            ), cus_monthly_txn AS (
-              SELECT 
+        WITH all_customer_months AS (
+            SELECT DISTINCT
+                customer_id,
+                txn_month
+            FROM
+                customer_transactions
+            CROSS JOIN (
+                SELECT
+                    generate_series(
+                        CAST(MIN(EXTRACT(MONTH FROM txn_date)) AS INT),
+                        CAST(MAX(EXTRACT(MONTH FROM txn_date)) AS INT),
+                        1
+                    ) AS txn_month
+                FROM
+                    customer_transactions
+            ) AS all_months
+        ),
+        cus_monthly_txn AS (
+            SELECT 
                 ct.customer_id,
-              	acm.txn_month,
-            	COALESCE(SUM((CASE WHEN ct.txn_type = 'deposit' THEN ct.txn_amount ELSE 0 END) - 
+                acm.txn_month,
+                COALESCE(SUM((CASE WHEN ct.txn_type = 'deposit' THEN ct.txn_amount ELSE 0 END) - 
                               (CASE WHEN ct.txn_type = 'purchase' THEN ct.txn_amount ELSE 0 END) - 
                               (CASE WHEN ct.txn_type = 'withdrawal' THEN ct.txn_amount ELSE 0 END)), 0) AS monthly_txn
-              FROM 
-                  all_customer_months acm
-              LEFT JOIN
-                  customer_transactions ct on acm.customer_id = ct.customer_id AND acm.txn_month = EXTRACT(MONTH FROM ct.txn_date)
-              GROUP BY 
-                  ct.customer_id, 
-                  acm.txn_month
-              ORDER BY
-                  ct.customer_id, 
-                  acm.txn_month
-            ), closing_balance AS (
-              SELECT
-              	acm.customer_id,
-              	acm.txn_month,
-              	SUM(cmt.monthly_txn) OVER (PARTITION BY acm.customer_id ORDER BY acm.txn_month) AS closing_balance
-              FROM 
-              	all_customer_months acm
-              LEFT JOIN
-              	cus_monthly_txn cmt on acm.customer_id = cmt.customer_id AND acm.txn_month = cmt.txn_month	
-            ), cus_growth AS (
-              SELECT 
-              	*,
-              	COALESCE((LAG(closing_balance) OVER (PARTITION BY customer_id ORDER BY txn_month)), 0) AS prev_closing_balance
-              FROM closing_balance
-             ), balance_summary AS ( 
+            FROM 
+                all_customer_months acm
+            LEFT JOIN
+                customer_transactions ct on acm.customer_id = ct.customer_id AND acm.txn_month = EXTRACT(MONTH FROM ct.txn_date)
+            GROUP BY 
+                ct.customer_id, 
+                acm.txn_month
+            ORDER BY
+                ct.customer_id, 
+                acm.txn_month
+        ),
+        closing_balance AS (
+            SELECT
+                acm.customer_id,
+                acm.txn_month,
+                SUM(cmt.monthly_txn) OVER (PARTITION BY acm.customer_id ORDER BY acm.txn_month) AS closing_balance
+            FROM 
+                all_customer_months acm
+            LEFT JOIN
+                cus_monthly_txn cmt on acm.customer_id = cmt.customer_id AND acm.txn_month = cmt.txn_month	
+        ),
+        cus_growth AS (
+            SELECT 
+                *,
+                COALESCE((LAG(closing_balance) OVER (PARTITION BY customer_id ORDER BY txn_month)), 0) AS prev_closing_balance
+            FROM closing_balance
+        ),
+        balance_summary AS ( 
             SELECT 
                 c.customer_id, 
                 (
@@ -296,17 +332,17 @@ Showing first 5.
                 cus_growth c
             WHERE 
                 c.txn_month = 3
-            )
-            
-            SELECT 
-                ROUND(((SELECT COUNT(customer_id) * 100.00
-                 FROM balance_summary
-                 WHERE (closing_balance * 100.00 / opening_balance) > 105.00) / COUNT(customer_id)), 2) AS growth_percentage_5
-            FROM balance_summary;
+        )
+        
+        SELECT 
+            ROUND(((SELECT COUNT(customer_id) * 100.00
+                    FROM balance_summary
+                    WHERE (closing_balance * 100.00 / opening_balance) > 105.00) / COUNT(customer_id)), 2) AS growth_percentage_5
+        FROM balance_summary;
 
 | growth_percentage_5 |
 | ------------------- |
-| 44.98               |
+| 45.00               |
 
 ## C. Data Allocation Challenge
 To test out a few different hypotheses - the Data Bank team wants to run an experiment where different groups of customers would be allocated data using 3 different options:
